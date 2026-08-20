@@ -1,0 +1,24 @@
+name: Build Ultimate Dylib
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Compile dylib
+      run: |
+        SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+        clang -arch arm64 -miphoneos-version-min=13.0 -isysroot $SDK \
+              -dynamiclib -framework UIKit -framework Foundation -framework CoreGraphics -framework QuartzCore -framework OpenGLES \
+              -lc++ -fobjc-arc -O3 -flto -fvisibility=hidden -Wl,-dead_strip \
+              -o ultimate.dylib ultimate.m
+        strip -S ultimate.dylib
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ultimate_dylib
+        path: ultimate.dylib
